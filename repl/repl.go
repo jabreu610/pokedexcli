@@ -1,10 +1,10 @@
-package main
+package repl
 
 import "strings"
 
-// cleanInput splits the input string by spaces, trims whitespace characters,
+// CleanInput splits the input string by spaces, trims whitespace characters,
 // and converts all strings to lowercase.
-func cleanInput(input string) []string {
+func CleanInput(input string) []string {
 	var out []string
 	for w := range strings.FieldsSeq(input) {
 		out = append(out, strings.ToLower(w))

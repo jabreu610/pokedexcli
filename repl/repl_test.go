@@ -1,6 +1,10 @@
-package main
+package repl_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/jabreu610/pokedexcli/repl"
+)
 
 func TestCleanInput(t *testing.T) {
 	cases := []struct {
@@ -26,7 +30,7 @@ func TestCleanInput(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := cleanInput(c.input)
+		actual := repl.CleanInput(c.input)
 		if len(actual) != len(c.expected) {
 			t.Errorf("lengths of actual and expected do not match: %v != %v", len(actual), len(c.expected))
 		}
