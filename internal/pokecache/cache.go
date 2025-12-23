@@ -25,6 +25,9 @@ type Cache struct {
 }
 
 func (c *Cache) Add(key string, val []byte) {
+	if c == nil {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.store[key] = newCacheEntry(val)
@@ -44,7 +47,9 @@ func (c *Cache) Get(key string) (val []byte, ok bool) {
 }
 
 func (c *Cache) Close() {
-	c.cancel()
+	if c.cancel != nil {
+		c.cancel()
+	}
 }
 
 func (c *Cache) reapLoop(min time.Time) {
@@ -67,6 +72,7 @@ func NewCache(interval time.Duration, parentCtx context.Context) *Cache {
 	ticker := time.NewTicker(interval)
 
 	go func() {
+		defer ticker.Stop()
 	CacheLoop:
 		for {
 			select {
