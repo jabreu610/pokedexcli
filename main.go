@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jabreu610/pokedexcli/pokeclient"
-	"github.com/jabreu610/pokedexcli/repl"
+	"github.com/jabreu610/pokedexcli/internal/pokeclient"
+	"github.com/jabreu610/pokedexcli/internal/repl"
 )
 
 type Config struct {
