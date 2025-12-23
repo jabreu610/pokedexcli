@@ -1,6 +1,7 @@
 package pokecache_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -8,14 +9,16 @@ import (
 )
 
 func TestNewCache(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
 	if cache == nil {
 		t.Fatal("NewCache returned nil")
 	}
+	defer cache.Close()
 }
 
 func TestCacheAddAndGet(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
 	key := "test-key"
 	val := []byte("test-value")
 
@@ -31,7 +34,8 @@ func TestCacheAddAndGet(t *testing.T) {
 }
 
 func TestCacheGetNonExistent(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
 
 	retrieved, ok := cache.Get("non-existent")
 	if ok {
@@ -44,7 +48,8 @@ func TestCacheGetNonExistent(t *testing.T) {
 
 func TestCacheReap(t *testing.T) {
 	interval := 100 * time.Millisecond
-	cache := pokecache.NewCache(interval)
+	cache := pokecache.NewCache(interval, context.Background())
+	defer cache.Close()
 
 	// Add an entry
 	key := "test-key"
@@ -69,7 +74,8 @@ func TestCacheReap(t *testing.T) {
 
 func TestCacheReapDoesNotRemoveFreshEntries(t *testing.T) {
 	interval := 200 * time.Millisecond
-	cache := pokecache.NewCache(interval)
+	cache := pokecache.NewCache(interval, context.Background())
+	defer cache.Close()
 
 	// Add first entry
 	cache.Add("old-key", []byte("old-value"))
@@ -97,7 +103,8 @@ func TestCacheReapDoesNotRemoveFreshEntries(t *testing.T) {
 }
 
 func TestCacheAddOverwrite(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
 	key := "test-key"
 	val1 := []byte("first-value")
 	val2 := []byte("second-value")
@@ -115,7 +122,8 @@ func TestCacheAddOverwrite(t *testing.T) {
 }
 
 func TestCacheConcurrency(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
 	done := make(chan bool)
 
 	// Concurrent writes
@@ -145,7 +153,8 @@ func TestCacheConcurrency(t *testing.T) {
 }
 
 func TestCacheMultipleKeys(t *testing.T) {
-	cache := pokecache.NewCache(5 * time.Second)
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
 
 	keys := []string{"key1", "key2", "key3"}
 	vals := [][]byte{[]byte("val1"), []byte("val2"), []byte("val3")}
@@ -164,5 +173,27 @@ func TestCacheMultipleKeys(t *testing.T) {
 		if string(retrieved) != string(vals[i]) {
 			t.Errorf("Expected value %s for key %s, got %s", vals[i], key, retrieved)
 		}
+	}
+}
+
+func TestCacheClose(t *testing.T) {
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+
+	// Add an entry
+	cache.Add("key", []byte("value"))
+
+	// Verify it exists
+	_, ok := cache.Get("key")
+	if !ok {
+		t.Fatal("Key should exist before close")
+	}
+
+	// Close the cache
+	cache.Close()
+
+	// Cache should still be accessible after close
+	_, ok = cache.Get("key")
+	if !ok {
+		t.Error("Key should still be retrievable after close")
 	}
 }

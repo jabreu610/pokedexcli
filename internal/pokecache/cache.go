@@ -1,6 +1,7 @@
 package pokecache
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -18,8 +19,9 @@ func newCacheEntry(val []byte) cacheEntry {
 }
 
 type Cache struct {
-	store map[string]cacheEntry
-	mu    sync.RWMutex
+	store  map[string]cacheEntry
+	mu     sync.RWMutex
+	cancel context.CancelFunc
 }
 
 func (c *Cache) Add(key string, val []byte) {
@@ -38,6 +40,10 @@ func (c *Cache) Get(key string) (val []byte, ok bool) {
 	return entry.val, ok
 }
 
+func (c *Cache) Close() {
+	c.cancel()
+}
+
 func (c *Cache) reapLoop(min time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -49,15 +55,23 @@ func (c *Cache) reapLoop(min time.Time) {
 	}
 }
 
-func NewCache(interval time.Duration) *Cache {
+func NewCache(interval time.Duration, parentCtx context.Context) *Cache {
+	ctx, cancel := context.WithCancel(parentCtx)
 	c := Cache{
-		store: map[string]cacheEntry{},
+		store:  map[string]cacheEntry{},
+		cancel: cancel,
 	}
 	ticker := time.NewTicker(interval)
 
 	go func() {
-		for range ticker.C {
-			c.reapLoop(time.Now().Add(interval * -1))
+	CacheLoop:
+		for {
+			select {
+			case <-ticker.C:
+				c.reapLoop(time.Now().Add(interval * -1))
+			case <-ctx.Done():
+				break CacheLoop
+			}
 		}
 	}()
 
