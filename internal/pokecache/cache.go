@@ -19,7 +19,7 @@ func newCacheEntry(val []byte) cacheEntry {
 
 type Cache struct {
 	store map[string]cacheEntry
-	mu    sync.Mutex
+	mu    sync.RWMutex
 }
 
 func (c *Cache) Add(key string, val []byte) {
@@ -29,8 +29,8 @@ func (c *Cache) Add(key string, val []byte) {
 }
 
 func (c *Cache) Get(key string) (val []byte, ok bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	entry, ok := c.store[key]
 	if !ok {
 		return nil, ok
