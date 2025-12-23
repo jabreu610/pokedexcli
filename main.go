@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-	next *string
-	prev *string
+	Next *string
+	Prev *string
 }
 
 type cliCommand struct {
@@ -21,6 +21,14 @@ type cliCommand struct {
 }
 
 var commands map[string]cliCommand
+
+func processLocationAreaResponse(d pokeclient.LocationAreaResponse, c *Config) {
+	c.Prev = d.Previous
+	c.Next = d.Next
+	for _, locArea := range d.Results {
+		fmt.Println(locArea.Name)
+	}
+}
 
 func commandExit(c *Config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
@@ -39,18 +47,27 @@ func commandHelp(c *Config) error {
 
 func commandMap(c *Config) error {
 	url := pokeclient.BaseUrlLocationArea
-	if c.next != nil {
-		url = *c.next
+	if c.Next != nil {
+		url = *c.Next
 	}
 	res, err := pokeclient.GetLocationAreas(url)
 	if err != nil {
 		return err
 	}
-	c.prev = res.Previous
-	c.next = res.Next
-	for _, locArea := range res.Results {
-		fmt.Println(locArea.Name)
+	processLocationAreaResponse(res, c)
+	return nil
+}
+
+func commandMapb(c *Config) error {
+	if c.Prev == nil {
+		fmt.Println("you're on the first page")
+		return nil
 	}
+	res, err := pokeclient.GetLocationAreas(*c.Prev)
+	if err != nil {
+		return err
+	}
+	processLocationAreaResponse(res, c)
 	return nil
 }
 
@@ -70,6 +87,11 @@ func init() {
 			Name:        "map",
 			Description: "Displays location areas",
 			Callback:    commandMap,
+		},
+		"mapb": {
+			Name:        "mapb",
+			Description: "Displays the previous page of location areas",
+			Callback:    commandMapb,
 		},
 	}
 }
