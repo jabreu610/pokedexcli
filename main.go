@@ -12,6 +12,8 @@ import (
 	"github.com/jabreu610/pokedexcli/internal/repl"
 )
 
+const defaultInterval = time.Second * 5
+
 type Config struct {
 	Next  *string
 	Prev  *string
@@ -103,7 +105,7 @@ func init() {
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	config := Config{
-		cache: pokecache.NewCache(time.Second*5, context.Background()),
+		cache: pokecache.NewCache(defaultInterval, context.Background()),
 	}
 	for {
 		fmt.Print("Pokedex > ")

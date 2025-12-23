@@ -33,12 +33,11 @@ func GetLocationAreas(url string, cache *pokecache.Cache) (LocationAreaResponse,
 		}
 		defer res.Body.Close()
 
-		data, err := io.ReadAll(res.Body)
+		d, err := io.ReadAll(res.Body)
 		if err != nil {
 			return out, err
 		}
-		d = data
-		cache.Add(url, data)
+		cache.Add(url, d)
 	}
 
 	if err := json.Unmarshal(d, &out); err != nil {

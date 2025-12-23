@@ -31,6 +31,9 @@ func (c *Cache) Add(key string, val []byte) {
 }
 
 func (c *Cache) Get(key string) (val []byte, ok bool) {
+	if c == nil {
+		return nil, false
+	}
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	entry, ok := c.store[key]
