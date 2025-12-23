@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+
+	"github.com/jabreu610/pokedexcli/internal/pokecache"
 )
 
 type LocationArea struct {
@@ -20,17 +22,23 @@ type LocationAreaResponse struct {
 
 const BaseUrlLocationArea = "https://pokeapi.co/api/v2/location-area"
 
-func GetLocationAreas(url string) (LocationAreaResponse, error) {
-	res, err := http.Get(url)
+func GetLocationAreas(url string, cache *pokecache.Cache) (LocationAreaResponse, error) {
 	out := LocationAreaResponse{}
-	if err != nil {
-		return out, err
-	}
-	defer res.Body.Close()
+	var d []byte
+	d, ok := cache.Get(url)
+	if !ok {
+		res, err := http.Get(url)
+		if err != nil {
+			return out, err
+		}
+		defer res.Body.Close()
 
-	d, err := io.ReadAll(res.Body)
-	if err != nil {
-		return out, err
+		data, err := io.ReadAll(res.Body)
+		if err != nil {
+			return out, err
+		}
+		d = data
+		cache.Add(url, data)
 	}
 
 	if err := json.Unmarshal(d, &out); err != nil {

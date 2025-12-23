@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/jabreu610/pokedexcli/internal/pokecache"
 	"github.com/jabreu610/pokedexcli/internal/pokeclient"
 	"github.com/jabreu610/pokedexcli/internal/repl"
 )
@@ -21,6 +23,7 @@ type cliCommand struct {
 }
 
 var commands map[string]cliCommand
+var cache *pokecache.Cache
 
 func processLocationAreaResponse(d pokeclient.LocationAreaResponse, c *Config) {
 	c.Prev = d.Previous
@@ -50,7 +53,7 @@ func commandMap(c *Config) error {
 	if c.Next != nil {
 		url = *c.Next
 	}
-	res, err := pokeclient.GetLocationAreas(url)
+	res, err := pokeclient.GetLocationAreas(url, cache)
 	if err != nil {
 		return err
 	}
@@ -63,7 +66,7 @@ func commandMapb(c *Config) error {
 		fmt.Println("you're on the first page")
 		return nil
 	}
-	res, err := pokeclient.GetLocationAreas(*c.Prev)
+	res, err := pokeclient.GetLocationAreas(*c.Prev, cache)
 	if err != nil {
 		return err
 	}
@@ -94,6 +97,7 @@ func init() {
 			Callback:    commandMapb,
 		},
 	}
+	cache = pokecache.NewCache(time.Second * 5)
 }
 
 func main() {

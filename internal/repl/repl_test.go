@@ -3,7 +3,7 @@ package repl_test
 import (
 	"testing"
 
-	"github.com/jabreu610/pokedexcli/repl"
+	"github.com/jabreu610/pokedexcli/internal/repl"
 )
 
 func TestCleanInput(t *testing.T) {
