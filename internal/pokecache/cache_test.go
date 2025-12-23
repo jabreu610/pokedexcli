@@ -197,3 +197,32 @@ func TestCacheClose(t *testing.T) {
 		t.Error("Key should still be retrievable after close")
 	}
 }
+
+func TestNilCacheGet(t *testing.T) {
+	var cache *pokecache.Cache
+
+	// Get should not panic on nil cache
+	val, ok := cache.Get("key")
+	if ok {
+		t.Error("Get should return false for nil cache")
+	}
+	if val != nil {
+		t.Error("Get should return nil value for nil cache")
+	}
+}
+
+func TestNilCacheAdd(t *testing.T) {
+	var cache *pokecache.Cache
+
+	// Add should not panic on nil cache
+	cache.Add("key", []byte("value"))
+	// If we get here without panicking, test passes
+}
+
+func TestNilCacheClose(t *testing.T) {
+	var cache *pokecache.Cache
+
+	// Close should not panic on nil cache
+	cache.Close()
+	// If we get here without panicking, test passes
+}

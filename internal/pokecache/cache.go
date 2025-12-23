@@ -47,7 +47,7 @@ func (c *Cache) Get(key string) (val []byte, ok bool) {
 }
 
 func (c *Cache) Close() {
-	if c.cancel != nil {
+	if c != nil && c.cancel != nil {
 		c.cancel()
 	}
 }
