@@ -132,6 +132,29 @@ func commandCatch(c *Config) error {
 	return nil
 }
 
+func commandInspect(c *Config) error {
+	if len(c.args) < 1 {
+		return errors.New("Expected one arguement, a Pokemon name. Recieved none")
+	}
+	pokemon, ok := c.pokedex[c.args[0]]
+	if !ok {
+		fmt.Printf("%s has not been caught!", c.args[0])
+		return nil
+	}
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, typeEntry := range pokemon.Types {
+		fmt.Printf("  - %s\n", typeEntry.Type.Name)
+	}
+	return nil
+}
+
 func init() {
 	commands = map[string]cliCommand{
 		"exit": {
@@ -163,6 +186,11 @@ func init() {
 			Name:        "catch",
 			Description: "Attenpt a Pokemon, expects a pokemon name as an argument",
 			Callback:    commandCatch,
+		},
+		"inspect": {
+			Name:        "inspect",
+			Description: "Check the Pokedex for caught pokemon stats",
+			Callback:    commandInspect,
 		},
 	}
 }

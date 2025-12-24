@@ -9,9 +9,27 @@ import (
 	"github.com/jabreu610/pokedexcli/internal/pokecache"
 )
 
+type Entry struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+type Stat struct {
+	Stat     Entry `json:"stat"`
+	BaseStat int   `json:"base_stat"`
+}
+
+type Type struct {
+	Type Entry `json:"type"`
+}
+
 type Pokemon struct {
 	Name           string `json:"name"`
+	Height         int    `json:"height"`
+	Weight         int    `json:"weight"`
 	BaseExperience int    `json:"base_experience"`
+	Stats          []Stat `json:"stats"`
+	Types          []Type `json:"types"`
 }
 
 var BaseUrlPokemon string = "https://pokeapi.co/api/v2/pokemon"

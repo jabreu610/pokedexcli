@@ -287,3 +287,147 @@ func TestConfigPokedexInitialization(t *testing.T) {
 		t.Errorf("Expected base experience 306, got %d", retrieved.BaseExperience)
 	}
 }
+
+func TestCommandInspectNoArgs(t *testing.T) {
+	config := &Config{
+		args:    []string{},
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	err := commandInspect(config)
+	if err == nil {
+		t.Error("commandInspect should return error when no arguments provided")
+	}
+}
+
+func TestCommandInspectPokemonNotCaught(t *testing.T) {
+	config := &Config{
+		args:    []string{"pikachu"},
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	// Should not return error, just print message
+	err := commandInspect(config)
+	if err != nil {
+		t.Errorf("commandInspect should not return error for uncaught pokemon, got %v", err)
+	}
+}
+
+func TestCommandInspectPokemonFound(t *testing.T) {
+	pokemon := pokeclient.Pokemon{
+		Name:           "charizard",
+		Height:         17,
+		Weight:         905,
+		BaseExperience: 240,
+		Stats: []pokeclient.Stat{
+			{
+				Stat:     pokeclient.Entry{Name: "hp"},
+				BaseStat: 78,
+			},
+			{
+				Stat:     pokeclient.Entry{Name: "attack"},
+				BaseStat: 84,
+			},
+		},
+		Types: []pokeclient.Type{
+			{Type: pokeclient.Entry{Name: "fire"}},
+			{Type: pokeclient.Entry{Name: "flying"}},
+		},
+	}
+
+	config := &Config{
+		args:    []string{"charizard"},
+		pokedex: map[string]pokeclient.Pokemon{"charizard": pokemon},
+	}
+
+	err := commandInspect(config)
+	if err != nil {
+		t.Errorf("commandInspect should not return error for caught pokemon, got %v", err)
+	}
+}
+
+func TestCommandInspectWithMultipleStats(t *testing.T) {
+	pokemon := pokeclient.Pokemon{
+		Name:           "bulbasaur",
+		Height:         7,
+		Weight:         69,
+		BaseExperience: 64,
+		Stats: []pokeclient.Stat{
+			{Stat: pokeclient.Entry{Name: "hp"}, BaseStat: 45},
+			{Stat: pokeclient.Entry{Name: "attack"}, BaseStat: 49},
+			{Stat: pokeclient.Entry{Name: "defense"}, BaseStat: 49},
+			{Stat: pokeclient.Entry{Name: "special-attack"}, BaseStat: 65},
+			{Stat: pokeclient.Entry{Name: "special-defense"}, BaseStat: 65},
+			{Stat: pokeclient.Entry{Name: "speed"}, BaseStat: 45},
+		},
+		Types: []pokeclient.Type{
+			{Type: pokeclient.Entry{Name: "grass"}},
+			{Type: pokeclient.Entry{Name: "poison"}},
+		},
+	}
+
+	config := &Config{
+		args:    []string{"bulbasaur"},
+		pokedex: map[string]pokeclient.Pokemon{"bulbasaur": pokemon},
+	}
+
+	err := commandInspect(config)
+	if err != nil {
+		t.Errorf("commandInspect should not return error, got %v", err)
+	}
+}
+
+func TestCommandInspectEmptyStats(t *testing.T) {
+	pokemon := pokeclient.Pokemon{
+		Name:           "missingno",
+		Height:         10,
+		Weight:         100,
+		BaseExperience: 0,
+		Stats:          []pokeclient.Stat{},
+		Types:          []pokeclient.Type{},
+	}
+
+	config := &Config{
+		args:    []string{"missingno"},
+		pokedex: map[string]pokeclient.Pokemon{"missingno": pokemon},
+	}
+
+	err := commandInspect(config)
+	if err != nil {
+		t.Errorf("commandInspect should handle empty stats/types, got %v", err)
+	}
+}
+
+func TestCommandInspectCaseInsensitive(t *testing.T) {
+	pokemon := pokeclient.Pokemon{
+		Name:           "pikachu",
+		Height:         4,
+		Weight:         60,
+		BaseExperience: 112,
+		Stats: []pokeclient.Stat{
+			{Stat: pokeclient.Entry{Name: "speed"}, BaseStat: 90},
+		},
+		Types: []pokeclient.Type{
+			{Type: pokeclient.Entry{Name: "electric"}},
+		},
+	}
+
+	// Add with lowercase
+	config := &Config{
+		args:    []string{"pikachu"},
+		pokedex: map[string]pokeclient.Pokemon{"pikachu": pokemon},
+	}
+
+	err := commandInspect(config)
+	if err != nil {
+		t.Errorf("commandInspect should find pokemon, got %v", err)
+	}
+
+	// Try to access with different case (will fail if map key doesn't match)
+	config.args = []string{"Pikachu"}
+	err = commandInspect(config)
+	// This should not error, but should print "not caught" message
+	if err != nil {
+		t.Errorf("commandInspect should not error, got %v", err)
+	}
+}
