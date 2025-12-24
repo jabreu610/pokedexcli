@@ -20,7 +20,7 @@ type LocationAreaResponse struct {
 	Results  []LocationArea `json:"results"`
 }
 
-const BaseUrlLocationArea = "https://pokeapi.co/api/v2/location-area"
+var BaseUrlLocationArea string = "https://pokeapi.co/api/v2/location-area"
 
 func GetLocationAreas(url string, cache *pokecache.Cache) (LocationAreaResponse, error) {
 	out := LocationAreaResponse{}
