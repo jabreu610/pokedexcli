@@ -431,3 +431,86 @@ func TestCommandInspectCaseInsensitive(t *testing.T) {
 		t.Errorf("commandInspect should not error, got %v", err)
 	}
 }
+
+func TestCommandPokedexEmpty(t *testing.T) {
+	config := &Config{
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	err := commandPokedex(config)
+	if err != nil {
+		t.Errorf("commandPokedex should not return error for empty pokedex, got %v", err)
+	}
+}
+
+func TestCommandPokedexWithOnePokemon(t *testing.T) {
+	pokemon := pokeclient.Pokemon{
+		Name:           "pikachu",
+		BaseExperience: 112,
+	}
+
+	config := &Config{
+		pokedex: map[string]pokeclient.Pokemon{"pikachu": pokemon},
+	}
+
+	err := commandPokedex(config)
+	if err != nil {
+		t.Errorf("commandPokedex should not return error, got %v", err)
+	}
+}
+
+func TestCommandPokedexWithMultiplePokemon(t *testing.T) {
+	config := &Config{
+		pokedex: map[string]pokeclient.Pokemon{
+			"pikachu": {
+				Name:           "pikachu",
+				BaseExperience: 112,
+			},
+			"charizard": {
+				Name:           "charizard",
+				BaseExperience: 240,
+			},
+			"mewtwo": {
+				Name:           "mewtwo",
+				BaseExperience: 306,
+			},
+		},
+	}
+
+	err := commandPokedex(config)
+	if err != nil {
+		t.Errorf("commandPokedex should not return error, got %v", err)
+	}
+
+	// Verify all pokemon are in the pokedex
+	if len(config.pokedex) != 3 {
+		t.Errorf("Expected 3 pokemon in pokedex, got %d", len(config.pokedex))
+	}
+}
+
+func TestCommandPokedexDoesNotModify(t *testing.T) {
+	originalPokemon := map[string]pokeclient.Pokemon{
+		"bulbasaur": {
+			Name:           "bulbasaur",
+			BaseExperience: 64,
+		},
+	}
+
+	config := &Config{
+		pokedex: originalPokemon,
+	}
+
+	err := commandPokedex(config)
+	if err != nil {
+		t.Errorf("commandPokedex should not return error, got %v", err)
+	}
+
+	// Verify pokedex wasn't modified
+	if len(config.pokedex) != 1 {
+		t.Error("commandPokedex should not modify the pokedex")
+	}
+	_, ok := config.pokedex["bulbasaur"]
+	if !ok {
+		t.Error("Original pokemon should still be in pokedex")
+	}
+}

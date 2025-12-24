@@ -124,6 +124,7 @@ func commandCatch(c *Config) error {
 	if caught {
 		caughtMsg := fmt.Sprintf("%s was caught!", pokemon.Name)
 		fmt.Println(caughtMsg)
+		fmt.Println("You may now inspect it with the inspect command.")
 		c.pokedex[pokemon.Name] = pokemon
 	} else {
 		failedMsg := fmt.Sprintf("%s escaped!", pokemon.Name)
@@ -151,6 +152,18 @@ func commandInspect(c *Config) error {
 	fmt.Println("Types:")
 	for _, typeEntry := range pokemon.Types {
 		fmt.Printf("  - %s\n", typeEntry.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(c *Config) error {
+	if len(c.pokedex) == 0 {
+		fmt.Println("Pokedex is empty!")
+		return nil
+	}
+	fmt.Println("Your Pokedex:")
+	for name, _ := range c.pokedex {
+		fmt.Printf("  - %s\n", name)
 	}
 	return nil
 }
@@ -191,6 +204,11 @@ func init() {
 			Name:        "inspect",
 			Description: "Check the Pokedex for caught pokemon stats",
 			Callback:    commandInspect,
+		},
+		"pokedex": {
+			Name:        "pokedex",
+			Description: "List Pokemon recorded in the Pokedex after they are caught",
+			Callback:    commandPokedex,
 		},
 	}
 }
