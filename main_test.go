@@ -88,7 +88,7 @@ func TestCommandExploreWithArgs(t *testing.T) {
 }
 
 func TestCommandsInitialized(t *testing.T) {
-	expectedCommands := []string{"exit", "help", "map", "mapb", "explore"}
+	expectedCommands := []string{"exit", "help", "map", "mapb", "explore", "catch"}
 
 	for _, cmdName := range expectedCommands {
 		cmd, ok := commands[cmdName]
@@ -175,5 +175,115 @@ func TestConfigNextPrevPointers(t *testing.T) {
 	}
 	if config.Prev == nil || *config.Prev != prevURL {
 		t.Error("Prev should be set correctly")
+	}
+}
+
+func TestCommandCatchNoArgs(t *testing.T) {
+	config := &Config{
+		args:    []string{},
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	err := commandCatch(config)
+	if err == nil {
+		t.Error("commandCatch should return error when no arguments provided")
+	}
+}
+
+func TestCommandCatchWithArgs(t *testing.T) {
+	cache := pokecache.NewCache(5*time.Second, context.Background())
+	defer cache.Close()
+
+	config := &Config{
+		args:    []string{"pikachu"},
+		cache:   cache,
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	// This will attempt to call the real API
+	// We're just testing it doesn't panic with valid args
+	err := commandCatch(config)
+	// We expect an error here because we're not mocking the API
+	if err == nil {
+		// If somehow it succeeds, that's fine too
+		return
+	}
+	// Just verify it's not an argument error
+	if err.Error() == "Expected one arguement, a Pokemon name. Recieved none" {
+		t.Error("Should not get argument error when args are provided")
+	}
+}
+
+func TestPassWithDifficulty(t *testing.T) {
+	tests := []struct {
+		name     string
+		baseExp  int
+		runCount int
+	}{
+		{
+			name:     "weak pokemon (low base exp)",
+			baseExp:  36,
+			runCount: 100,
+		},
+		{
+			name:     "medium pokemon",
+			baseExp:  300,
+			runCount: 100,
+		},
+		{
+			name:     "strong pokemon (high base exp)",
+			baseExp:  635,
+			runCount: 100,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			passCount := 0
+			for i := 0; i < tt.runCount; i++ {
+				if passWithDifficulty(tt.baseExp) {
+					passCount++
+				}
+			}
+
+			// Just verify it returns both true and false (not deterministic)
+			// and that weaker pokemon have higher pass rates
+			passRate := float64(passCount) / float64(tt.runCount)
+
+			if tt.baseExp == 36 && passRate < 0.7 {
+				t.Errorf("Weak pokemon should have high pass rate, got %.2f", passRate)
+			}
+			if tt.baseExp == 635 && passRate > 0.3 {
+				t.Errorf("Strong pokemon should have low pass rate, got %.2f", passRate)
+			}
+		})
+	}
+}
+
+func TestConfigPokedexInitialization(t *testing.T) {
+	config := &Config{
+		pokedex: make(map[string]pokeclient.Pokemon),
+	}
+
+	if config.pokedex == nil {
+		t.Error("Pokedex should be initialized")
+	}
+
+	// Test adding to pokedex
+	pokemon := pokeclient.Pokemon{
+		Name:           "mewtwo",
+		BaseExperience: 306,
+	}
+	config.pokedex["mewtwo"] = pokemon
+
+	retrieved, ok := config.pokedex["mewtwo"]
+	if !ok {
+		t.Error("Pokemon should be in pokedex")
+	}
+	if retrieved.Name != "mewtwo" {
+		t.Errorf("Expected name 'mewtwo', got %s", retrieved.Name)
+	}
+	if retrieved.BaseExperience != 306 {
+		t.Errorf("Expected base experience 306, got %d", retrieved.BaseExperience)
 	}
 }

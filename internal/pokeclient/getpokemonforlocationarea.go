@@ -2,6 +2,7 @@ package pokeclient
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -32,6 +33,9 @@ func GetPokemonForLocationName(name string, cache *pokecache.Cache) ([]string, e
 			return out, err
 		}
 		defer res.Body.Close()
+		if res.StatusCode == 404 {
+			return out, errors.New("")
+		}
 
 		d, err = io.ReadAll(res.Body)
 		if err != nil {
