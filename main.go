@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -18,6 +19,7 @@ type Config struct {
 	Next  *string
 	Prev  *string
 	cache *pokecache.Cache
+	args  []string
 }
 
 type cliCommand struct {
@@ -77,6 +79,20 @@ func commandMapb(c *Config) error {
 	return nil
 }
 
+func commandExplore(c *Config) error {
+	if len(c.args) < 1 {
+		return errors.New("Expected one arguement, a location area name. Recieve none")
+	}
+	pokemon, err := pokeclient.GetPokemonForLocationName(c.args[0], c.cache)
+	if err != nil {
+		return err
+	}
+	for _, name := range pokemon {
+		fmt.Println(name)
+	}
+	return nil
+}
+
 func init() {
 	commands = map[string]cliCommand{
 		"exit": {
@@ -99,6 +115,11 @@ func init() {
 			Description: "Displays the previous page of location areas",
 			Callback:    commandMapb,
 		},
+		"explore": {
+			Name:        "explore",
+			Description: "List Pokemon for a given location area",
+			Callback:    commandExplore,
+		},
 	}
 }
 
@@ -119,6 +140,11 @@ func main() {
 			continue
 		}
 		command, ok := commands[cleaned[0]]
+		if len(cleaned) > 1 {
+			config.args = cleaned[1:]
+		} else {
+			config.args = []string{}
+		}
 		if !ok {
 			fmt.Println("Unknown command")
 			continue
